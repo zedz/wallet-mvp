@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -25,8 +26,8 @@ export default function LoginPage() {
       const res = await axios.post('/api/auth/login', form);
       if (res.status === 200) {
         toast.success('Login successful');
-        router.replace('/dashboard'); // 避免历史记录残留
-        router.refresh();             // 强制刷新让中间件/服务端读到新cookie
+        router.replace('/dashboard'); // ✅ 跳转
+        router.refresh();             // ✅ 强制刷新，确保读到 Cookie
       } else {
         toast.error('Login failed');
       }
