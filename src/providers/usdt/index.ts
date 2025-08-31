@@ -2,12 +2,16 @@
 
 // ---- Types ----
 export type USDTWallet = {
-  address: string;            // 兼容 /wallets/init 路由
-  depositAddress?: string;    // 兼容旧接口/其它调用
+  /** 兼容 /wallets/init 路由需要的字段 */
+  address: string;
+  balance: string;     // 字符串格式余额，例如 "0.00"
+  userId: string;
+  /** 兼容旧接口/其它调用 */
+  depositAddress?: string;
 };
 
 export type USDTTransferResult = {
-  /** 统一转账 Id：为兼容路由，这里等同于 txId */
+  /** 统一转账 Id：为兼容某些路由，这里等同于 txId */
   id?: string;
   /** 提供商返回的交易 Id（模拟下就是生成的随机串） */
   txId?: string;
@@ -19,8 +23,8 @@ export type USDTTransferResult = {
 export type USDTClient = {
   /** 旧式/部分路由：获取或创建充币地址（返回 depositAddress） */
   getOrCreateWallet: (userId: string) => Promise<{ depositAddress: string }>;
-  /** 你当前路由使用：创建钱包（返回 address） */
-  createWallet: (userId: string) => Promise<{ address: string }>;
+  /** 你当前 /api/usdt/wallets/init 路由使用：创建钱包（返回 address/balance/userId） */
+  createWallet: (userId: string) => Promise<USDTWallet>;
   /** 查询余额（字符串，单位 USDT） */
   getBalance: (userId: string) => Promise<{ balance: string }>;
   /** 发送 USDT（标准方法） */
@@ -64,7 +68,14 @@ const simClient: USDTClient = {
 
   async createWallet(userId) {
     const addr = buildSimAddress(userId);
-    return { address: addr };
+    const bal = simBalances.get(userId) ?? 0;
+    return {
+      address: addr,
+      balance: bal.toFixed(2),
+      userId,
+      // depositAddress 可选，如果有其它地方需要相同地址也可同时返回：
+      // depositAddress: addr,
+    };
   },
 
   async getBalance(userId) {
