@@ -4,8 +4,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  url       = env("DATABASE_URL")
 }
 
 model User {
@@ -38,15 +37,15 @@ model Account {
 }
 
 model Transfer {
-  id       String @id @default(cuid())
-  userId   String
-  asset    String // USDC, USDT, XRP
-  chain    String // ethereum, ripple
+  id        String  @id @default(cuid())
+  userId    String
+  asset     String  // USDC, USDT, XRP
+  chain     String  // ethereum, ripple
   toAddress String
-  amount   String // Store as string to avoid precision issues
-  txHash   String?
-  status   String // PENDING, COMPLETED, FAILED, SIMULATED
-  label    String?
+  amount    String  // Store as string to avoid precision issues
+  txHash    String?
+  status    String  // PENDING, COMPLETED, FAILED, SIMULATED
+  label     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
