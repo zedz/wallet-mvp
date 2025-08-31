@@ -26,10 +26,8 @@ export default function LoginPage() {
       const res = await axios.post('/api/auth/login', form);
       if (res.status === 200) {
         toast.success('Login successful');
-        // ✅ 用 replace 避免历史记录里残留 /login
-        router.replace('/dashboard');
-        // ✅ 强制刷新 App Router，确保中间件能读到新 Cookie
-        router.refresh();
+        router.replace('/dashboard'); // 避免历史记录残留
+        router.refresh();             // 强制刷新让中间件/服务端读到新cookie
       } else {
         toast.error('Login failed');
       }
