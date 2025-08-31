@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { SendUSDCData, SendUSDTData, SendXRPData } from '@/lib/validation';
 
 type SendType = 'USDC' | 'USDT' | 'XRP';
 
@@ -24,19 +23,18 @@ export function SendSection() {
         USDT: '/api/usdt/send',
         XRP: '/api/xrp/send',
       };
-      
-      // Transform data for XRP endpoint
-      const payload = type === 'XRP' 
+      // XRP 接口使用 amountXrp
+      const payload = type === 'XRP'
         ? { ...data, amountXrp: data.amount }
         : data;
-      
+
       const response = await axios.post(endpoints[type], payload);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success(`${activeTab} sent successfully`);
       setFormData({ toAddress: '', amount: '', label: '' });
-      // Refresh balances
+      // 刷新余额与交易列表
       queryClient.invalidateQueries({ queryKey: ['balances'] });
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
     },
@@ -48,12 +46,10 @@ export function SendSection() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.toAddress || !formData.amount) {
       toast.error('Please fill in required fields');
       return;
     }
-
     sendMutation.mutate({
       type: activeTab,
       data: formData,
@@ -76,6 +72,7 @@ export function SendSection() {
           Send Assets
         </h3>
 
+        {/* Tabs */}
         <div className="sm:hidden">
           <select
             value={activeTab}
@@ -89,13 +86,13 @@ export function SendSection() {
             ))}
           </select>
         </div>
-
         <div className="hidden sm:block">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               {tabs.map((tab) => (
                 <button
                   key={tab}
+                  type="button"
                   onClick={() => setActiveTab(tab)}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab
@@ -110,34 +107,9 @@ export function SendSection() {
           </div>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label htmlFor="label" className="block text-sm font-medium text-gray-700">
-              Label (Optional)
-            </label>
-            <input
-              type="text"
-              id="label"
-              name="label"
-              value={formData.label}
-              onChange={handleChange}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="Transaction description"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={sendMutation.isPending}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {sendMutation.isPending ? `Sending ${activeTab}...` : `Send ${activeTab}`}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
             <label htmlFor="toAddress" className="block text-sm font-medium text-gray-700">
               Recipient Address *
             </label>
@@ -175,3 +147,31 @@ export function SendSection() {
           </div>
 
           <div>
+            <label htmlFor="label" className="block text-sm font-medium text-gray-700">
+              Label (Optional)
+            </label>
+            <input
+              type="text"
+              id="label"
+              name="label"
+              value={formData.label}
+              onChange={handleChange}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="Transaction description"
+            />
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={sendMutation.isPending}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {sendMutation.isPending ? `Sending ${activeTab}...` : `Send ${activeTab}`}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
