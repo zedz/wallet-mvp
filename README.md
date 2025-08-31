@@ -1,6 +1,6 @@
 # Wallet MVP - Multi-Currency Digital Wallet
 
-A production-ready multi-currency digital wallet with stablecoins (USDC, USDT), Ripple (XRP), and demo Visa prepaid card functionality.
+A production-ready multi-currency digital wallet with stablecoins (USDC, USDT), Ripple (XRP), and demo Visa prepaid card functionality. 
 
 ## Features
 
