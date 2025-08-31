@@ -1,78 +1,46 @@
-// ✅ 放在文件最上面
-export const runtime = 'nodejs';        // 用 Node runtime，避免 Edge 限制
-export const dynamic = 'force-dynamic'; // 禁止静态化，这个路由总是动态执行
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
-import { z } from 'zod';
-import { db } from '@/lib/db';
-import { loginSchema } from '@/lib/validation';
-import { env } from '@/config/env';
+import jwt from 'jsonwebtoken';
+import { env } from '@/config/env'; // 确保有 JWT_SECRET
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = loginSchema.parse(body);
+    const { email, password } = await req.json();
 
-    // Find user
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
+      select: { id: true, email: true, password: true },
     });
-
     if (!user) {
-      return NextResponse.json(
-        { error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' } },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: { message: 'Invalid credentials' } }, { status: 401 });
     }
 
-    // Verify password
-    const isPasswordValid = await compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' } },
-        { status: 401 }
-      );
+    const ok = await compare(password, user.password);
+    if (!ok) {
+      return NextResponse.json({ error: { message: 'Invalid credentials' } }, { status: 401 });
     }
 
-    // Generate JWT
-    const token = sign(
-      { id: user.id, email: user.email },
-      env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // 生成 JWT（你也可以加 exp）
+    const token = jwt.sign({ sub: user.id, email: user.email }, env.JWT_SECRET);
 
-    // Set HTTP-only cookie
-    const response = NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-      },
-    });
+    const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email } }, { status: 200 });
 
-    response.cookies.set('auth-token', token, {
+    // ✅ 关键：写 HttpOnly Cookie，作用域根路径
+    res.cookies.set('token', token, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      secure: true,          // Vercel 上是 https
+      sameSite: 'lax',
+      path: '/',             // 覆盖全站
+      maxAge: 60 * 60 * 24 * 7, // 7 天
     });
 
-    return response;
-  } catch (error) {
-    console.error('Login error:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid input data' } },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
-      { status: 500 }
-    );
+    return res;
+  } catch (e: any) {
+    console.error('LOGIN_ERROR', e?.message || e);
+    return NextResponse.json({ error: { message: 'Internal server error' } }, { status: 500 });
   }
 }
