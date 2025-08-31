@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account   Account?
+  transfers Transfer[]
+  cards     Card[]
+
+  @@map("users")
+}
+
+model Account {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  ethAddress    String?
+  xrpAddress    String?
+  encryptedData String? // Encrypted private keys/seeds
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Transfer {
+  id       String @id @default(cuid())
+  userId   String
+  asset    String // USDC, USDT, XRP
+  chain    String // ethereum, ripple
+  toAddress String
+  amount   String // Store as string to avoid precision issues
+  txHash   String?
+  status   String // PENDING, COMPLETED, FAILED, SIMULATED
+  label    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transfers")
+}
+
+model Card {
+  id           String  @id @default(cuid())
+  userId       String
+  providerType String  // giftbit, etc
+  providerId   String? // External provider card ID
+  last4        String?
+  expiry       String? // MM/YY format
+  balance      String? // Current balance as string
+  status       String  @default("ACTIVE") // ACTIVE, SUSPENDED, EXPIRED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cards")
+}
