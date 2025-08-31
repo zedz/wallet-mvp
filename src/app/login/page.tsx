@@ -25,8 +25,11 @@ export default function LoginPage() {
     try {
       const res = await axios.post('/api/auth/login', form);
       if (res.status === 200) {
-        toast.success('Logged in');
-        router.push('/dashboard');
+        toast.success('Login successful');
+        // ✅ 用 replace 避免历史记录里残留 /login
+        router.replace('/dashboard');
+        // ✅ 强制刷新 App Router，确保中间件能读到新 Cookie
+        router.refresh();
       } else {
         toast.error('Login failed');
       }
@@ -100,7 +103,10 @@ export default function LoginPage() {
         </form>
 
         <p className="text-xs text-gray-400 mt-4">
-          Don’t have an account? <a href="/register" className="text-indigo-600 hover:underline">Register</a>
+          Don’t have an account?{' '}
+          <a href="/register" className="text-indigo-600 hover:underline">
+            Register
+          </a>
         </p>
       </div>
     </div>
