@@ -1,3 +1,9 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+// 下面是你原本的代码
+
+
 'use client';
 
 import { useState } from 'react';
