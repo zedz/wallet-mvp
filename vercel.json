@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "app/**/route.ts": {
-      "maxDuration": 30
-    }
-  },
-  "regions": ["iad1"],
-  "buildCommand": "npm run build"
+  "framework": "nextjs",
+  "regions": ["iad1"]
 }
