@@ -14,7 +14,7 @@ export type USDTClient = {
     amount: string;
     label?: string;
     network?: string;
-  }) => Promise<{ txId?: string; txHash?: string; status: 'SIMULATED' | 'PENDING' | 'COMPLETED' }>;
+  }) => Promise<USDTTransferResult>;
 
   /** createTransfer: send 的别名，保持和 route.ts 的兼容 */
   createTransfer: (params: {
@@ -24,7 +24,17 @@ export type USDTClient = {
     amount: string;
     label?: string;
     network?: string;
-  }) => Promise<{ txId?: string; txHash?: string; status: 'SIMULATED' | 'PENDING' | 'COMPLETED' }>;
+  }) => Promise<USDTTransferResult>;
+};
+
+export type USDTTransferResult = {
+  /** 统一转账Id：为兼容路由，这里等同于 txId */
+  id?: string;
+  /** 提供商返回的交易Id（模拟下就是生成的随机串）*/
+  txId?: string;
+  /** 兼容前端/其它路由的字段名 */
+  txHash?: string;
+  status: 'SIMULATED' | 'PENDING' | 'COMPLETED';
 };
 
 /**
@@ -61,8 +71,8 @@ const simClient: USDTClient = {
       .toString(36)
       .slice(2, 8)}`;
 
-    // 同时返回 txId 和 txHash（别名），兼容前端/路由两种写法
-    return { txId, txHash: txId, status: 'SIMULATED' };
+    // 关键：同时返回 id / txId / txHash，三者兼容
+    return { id: txId, txId, txHash: txId, status: 'SIMULATED' };
   },
 
   async createTransfer(params) {
