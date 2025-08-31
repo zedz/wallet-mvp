@@ -3,12 +3,12 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import Providers from '@/components/providers';
-import WalletSection from '@/components/wallet-section';
-import BalancesSection from '@/components/balances-section';
-import SendSection from '@/components/send-section';
-import TransfersSection from '@/components/transfers-section';
-import CardSection from '@/components/card-section';
+import { Providers } from '@/components/providers';
+import { WalletSection } from '@/components/wallet-section';
+import { BalancesSection } from '@/components/balances-section';
+import { SendSection } from '@/components/send-section';
+import { CardSection } from '@/components/card-section';
+import { TransfersSection } from '@/components/transfers-section';
 
 export default function DashboardPage() {
   return (
